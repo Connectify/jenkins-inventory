@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "jenkins-inventory"
+version = "0.1.0"
+description = "Query Jenkins for dependencies"
+packages = [{ include="jenkins_inventory.py", from="src/" }]
+authors = ["Mark A. Hershberger <mah@everybody.org>"]
+license = "gpl-3-or-greater"
+readme = "README.org"
+
+[tool.poetry.scripts]
+grep = "jenkins_inventory:JenkinsInventory.grep"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+api4jenkins = "^2.0.3"
+py-dotenv-safe = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+python-lsp-server = "^1.11.0"
+Flake8-pyproject = "^1.2.3"
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.pylint]
+max-line-length=120
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
