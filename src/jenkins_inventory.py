@@ -39,13 +39,13 @@ class JenkinsInventory:
         # Search for Docker image in each job's configuration
         jobs_using_docker = []
 
-        for item in jenkins.iter_all_items():
+        for item in jenkins.iter():
             try:
-                config_xml = item.config
+                config_xml = item.configure()
                 if docker_image and docker_image in config_xml:
                     jobs_using_docker.append(item.url)
             except Exception as e:
-                (f"Error accessing configuration for {item.url}: {str(e)}")
+                logging.warn(f"Error accessing configuration for {item.url}: {str(e)}")
 
         # Output results
         for job_url in jobs_using_docker:
