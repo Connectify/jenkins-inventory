@@ -10,10 +10,17 @@ Examples
 
 import logging
 import os
+import re
 from argparse import ArgumentParser, Namespace
 
 from api4jenkins import Jenkins
 from py_dotenv_safe import config
+from pygments import highlight
+from pygments.formatters import TerminalFormatter
+from pygments.token import Token
+
+from custom_lexer import XmlCustomLexer
+from highlight_style import SearchHighlightStyle
 
 # dotenv config
 options = {
@@ -97,13 +104,57 @@ class JenkinsInventory:
         """UI for ji_grep."""
         parser = ArgumentParser(description="Search for a string in Jenkins jobs")
         parser.add_argument("search", help="The string search for")
-
+        parser.add_argument(
+            "-l", "--list", help="Only show the url", action="store_true"
+        )
         args = cls.std_args(parser)
 
-        cls.grep(args.search)
+        cls.grep(args.search, args)
 
     @classmethod
-    def grep(cls, search: str) -> None:
+    def show_hit(cls, url: str, search: str, xml: str, args: Namespace) -> None:
+        """
+        Format any hits for display.
+
+        Parameters
+        ----------
+        url : str
+            Where the match was found.
+        search : str
+            To be highlighted.
+        xml : str
+            XML formatted text to be highlighted.
+        args : Namespace
+            Any other argumentss.
+        """
+        if args.list:
+            logging.info(url)
+            return
+
+        # Escape the search term to handle special characters safely
+        pattern = re.escape(search)
+
+        # Highlight terms using a special Token type
+        highlighted_xml = re.sub(
+            pattern,
+            lambda m: f"{{{{search_highlight}}}}{m.group(0)}{{{{/search_highlight}}}}",
+            xml,
+            flags=re.IGNORECASE,
+        ).replace("__MATCH__", f"{Token.SearchMatch}")
+
+        # Produce highlighted XML using Pygments and custom style
+        highlighted_xml = highlight(
+            highlighted_xml,
+            XmlCustomLexer(),
+            TerminalFormatter(style=SearchHighlightStyle),
+        )
+
+        for line in highlighted_xml.splitlines():
+            if search.lower() in line.lower():
+                logging.info(f"{url}: {line}")
+
+    @classmethod
+    def grep(cls, search: str, args: Namespace) -> None:
         """
         Implementation of ji_grep.
 
@@ -111,6 +162,8 @@ class JenkinsInventory:
         ----------
         search : str
             What to look for.
+        args : Namespace
+            Any other argumentss.
         """
         # Retrieve configurations from .env
         jenkins_url = os.getenv("JENKINS_URL")
@@ -121,18 +174,12 @@ class JenkinsInventory:
         jenkins = Jenkins(jenkins_url, auth=(username, password))
 
         # Search for Docker image in each job's configuration
-        jobs_using_docker = []
-
         for item in jenkins.iter():
             try:
                 config_xml = item.configure()
                 if search and search in config_xml:
-                    jobs_using_docker.append(item.url)
+                    cls.show_hit(item.url, search, config_xml, args)
             except Exception as e:
                 logging.exception(
                     f"Error accessing configuration for {item.url}: {str(e)}"
                 )
-
-        # Output results
-        for job_url in jobs_using_docker:
-            logging.info(f'String "{search}" is used in job at: {job_url}')

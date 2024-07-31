@@ -14,6 +14,7 @@ ji_grep = "jenkins_inventory:JenkinsInventory.grep_cli"
 python = "^3.12"
 api4jenkins = "^2.0.3"
 py-dotenv-safe = "^1.0.1"
+pygments = "^2.18.0"
 
 [tool.poetry.group.dev.dependencies]
 python-lsp-server = "^1.11.0"
