@@ -8,7 +8,7 @@ license = "gpl-3-or-greater"
 readme = "README.org"
 
 [tool.poetry.scripts]
-find = "jenkins_inventory:JenkinsInventory.grep"
+ji_grep = "jenkins_inventory:JenkinsInventory.grep_cli"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -25,6 +25,9 @@ max-line-length = 120
 
 [tool.pylint]
 max-line-length=120
+
+[tool.numpydoc_validation]
+checks = [ "all", "EX01", "SA01", "ES01" ]
 
 [build-system]
 requires = ["poetry-core"]
