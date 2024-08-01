@@ -27,6 +27,9 @@ max-line-length = 120
 [tool.pylint]
 max-line-length=120
 
+[tool.black]
+line-length=120
+
 [tool.numpydoc_validation]
 checks = [ "all", "EX01", "SA01", "ES01" ]
 

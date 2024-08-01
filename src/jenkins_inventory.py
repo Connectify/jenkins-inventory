@@ -104,9 +104,7 @@ class JenkinsInventory:
         try:
             parser = ArgumentParser(description="Search for a string in Jenkins jobs")
             parser.add_argument("search", help="The string search for")
-            parser.add_argument(
-                "-l", "--list", help="Only show the url", action="store_true"
-            )
+            parser.add_argument("-l", "--list", help="Only show the url", action="store_true")
             parser.add_argument(
                 "-d",
                 "--show_disabled",
@@ -202,17 +200,11 @@ class JenkinsInventory:
         # Search for Docker image in each job's configuration
         for item in jenkins.iter():
             try:
-                if (
-                    hasattr(item, "disabled")
-                    and item.disabled
-                    and not args.show_disabled
-                ):
+                if hasattr(item, "disabled") and item.disabled and not args.show_disabled:
                     logging.debug(f"Not checking {item.url}: disabled")
                     continue
                 config_xml = item.configure()
                 if search and search in config_xml:
                     cls.show_hit(item, search, args)
             except Exception as e:
-                logging.exception(
-                    f"Error accessing configuration for {item.url}: {str(e)}"
-                )
+                logging.exception(f"Error accessing configuration for {item.url}: {str(e)}")
