@@ -33,6 +33,26 @@ class JenkinsInventory:
     """Interface for querying Jenkins."""
 
     @classmethod
+    def create_valid_filename(cls, title: str) -> str:
+        """
+        Remove or replace invalid characters not allowed in file names.
+
+        Parameters
+        ----------
+        title : str
+            The string to alter.
+
+        Returns
+        -------
+        str :
+            A valid file name.
+        """
+        title = re.sub(r'[<>:"/\\|?*]', "", title)
+        title = re.sub(r"\s+", "-", title)
+        title = title.strip("-")
+        return title
+
+    @classmethod
     def configure_loggers(cls, verbose_level: int) -> None:
         """
         Standard logger config to hide messages from noisy libraries.
@@ -111,11 +131,42 @@ class JenkinsInventory:
                 help="Show disabled jobs as well.",
                 action="store_true",
             )
+            parser.add_argument(
+                "-w",
+                "--write",
+                help="Save matched configuration using the name of the job as the filename.",
+                action="store_true",
+            )
+            parser.add_argument(
+                "-i",
+                "--ignore_case",
+                help="Matches are case insensitive.",
+                action="store_true",
+            )
             args = cls.std_args(parser)
 
             cls.grep(args.search, args)
         except KeyboardInterrupt:
             logging.warning("Interrupted")
+
+    @classmethod
+    def write_config(cls, item: job) -> None:
+        """
+        Write the configuration for the job to a file.
+
+        Parameters
+        ----------
+        item : job
+            Jenkins job to write.
+        """
+        name = item.display_name
+        if name is None or name == "":
+            logging.warning("Cannot use name for filename. Using url.")
+            name = item.url
+        name = cls.create_valid_filename(name) + ".xml"
+        logging.info(f"Saving {item.url} to {name}")
+        with open(name, "w") as file:
+            file.write(item.configure())
 
     @classmethod
     def show_hit(cls, item: job, search: str, args: Namespace) -> None:
@@ -156,7 +207,7 @@ class JenkinsInventory:
         )
 
         for line in highlighted_xml.splitlines():
-            if search.lower() in line.lower():
+            if cls.has_hit(search, line, args):
                 cls.show_matching_line(item, line)
 
     @classmethod
@@ -176,6 +227,30 @@ class JenkinsInventory:
             logging.info(f"{item.url}: {line}")
             return
         logging.info(f"{name} ({item.url}): {line}")
+
+    @classmethod
+    def has_hit(cls, needle: str, haystack: str, args: Namespace) -> bool:
+        """
+        Return true if needle is in the haystack.
+
+        Parameters
+        ----------
+        needle : str
+            String to look for.
+        haystack : str
+            String to look in.
+        args : Namespace
+            Any other argumentss.
+
+        Returns
+        -------
+        bool :
+            Found or not.
+        """
+        if args.ignore_case:
+            needle = needle.lower()
+            haystack = haystack.lower()
+        return isinstance(needle, str) and needle in haystack
 
     @classmethod
     def grep(cls, search: str, args: Namespace) -> None:
@@ -203,8 +278,9 @@ class JenkinsInventory:
                 if hasattr(item, "disabled") and item.disabled and not args.show_disabled:
                     logging.debug(f"Not checking {item.url}: disabled")
                     continue
-                config_xml = item.configure()
-                if search and search in config_xml:
+                if cls.has_hit(search, item.configure(), args):
                     cls.show_hit(item, search, args)
+                    if args.write:
+                        cls.write_config(item)
             except Exception as e:
                 logging.exception(f"Error accessing configuration for {item.url}: {str(e)}")
