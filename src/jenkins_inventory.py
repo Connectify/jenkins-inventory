@@ -101,14 +101,17 @@ class JenkinsInventory:
     @classmethod
     def grep_cli(cls) -> None:
         """UI for ji_grep."""
-        parser = ArgumentParser(description="Search for a string in Jenkins jobs")
-        parser.add_argument("search", help="The string search for")
-        parser.add_argument(
-            "-l", "--list", help="Only show the url", action="store_true"
-        )
-        args = cls.std_args(parser)
+        try:
+            parser = ArgumentParser(description="Search for a string in Jenkins jobs")
+            parser.add_argument("search", help="The string search for")
+            parser.add_argument(
+                "-l", "--list", help="Only show the url", action="store_true"
+            )
+            args = cls.std_args(parser)
 
-        cls.grep(args.search, args)
+            cls.grep(args.search, args)
+        except KeyboardInterrupt:
+            logging.warning("Interrupted")
 
     @classmethod
     def show_hit(cls, item: job, search: str, args: Namespace) -> None:
