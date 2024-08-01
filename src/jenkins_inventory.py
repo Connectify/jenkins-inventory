@@ -164,9 +164,35 @@ class JenkinsInventory:
             logging.warning("Cannot use name for filename. Using url.")
             name = item.url
         name = cls.create_valid_filename(name) + ".xml"
+        if os.path.exists(name):
+            logging.warning(f"Not overwriting {name}")
+            return
         logging.info(f"Saving {item.url} to {name}")
         with open(name, "w") as file:
             file.write(item.configure())
+
+    @classmethod
+    def create_pattern(cls, search: str, args: Namespace) -> str:
+        """
+        Get a pattern to match our string.
+
+        Parameters
+        ----------
+        search : str
+            String to turn into a pattern.
+        args : Namespace
+            Any other arguments.
+
+        Returns
+        -------
+        str :
+            Pattern to use for matching.
+        """
+        pattern = re.escape(search)
+        if args.ignore_case:
+            pattern = "(?i)" + pattern
+
+        return pattern
 
     @classmethod
     def show_hit(cls, item: job, search: str, args: Namespace) -> None:
@@ -187,13 +213,10 @@ class JenkinsInventory:
             logging.info(url)
             return
 
-        # Escape the search term to handle special characters safely
-        pattern = re.escape(search)
-
         # Highlight terms using a special Token type
         xml = item.configure()
         highlighted_xml = re.sub(
-            pattern,
+            search,
             lambda m: f"{{{{search_highlight}}}}{m.group(0)}{{{{/search_highlight}}}}",
             xml,
             flags=re.IGNORECASE,
@@ -247,10 +270,9 @@ class JenkinsInventory:
         bool :
             Found or not.
         """
-        if args.ignore_case:
-            needle = needle.lower()
-            haystack = haystack.lower()
-        return isinstance(needle, str) and needle in haystack
+        if not isinstance(needle, str):
+            return False
+        return re.search(needle, haystack) is not None
 
     @classmethod
     def grep(cls, search: str, args: Namespace) -> None:
@@ -272,14 +294,17 @@ class JenkinsInventory:
         # Connect to Jenkins
         jenkins = Jenkins(jenkins_url, auth=(username, password))
 
+        # Escape the search term to handle special characters safely
+        pattern = cls.create_pattern(search, args)
+
         # Search for Docker image in each job's configuration
         for item in jenkins.iter():
             try:
                 if hasattr(item, "disabled") and item.disabled and not args.show_disabled:
                     logging.debug(f"Not checking {item.url}: disabled")
                     continue
-                if cls.has_hit(search, item.configure(), args):
-                    cls.show_hit(item, search, args)
+                if cls.has_hit(pattern, item.configure(), args):
+                    cls.show_hit(item, pattern, args)
                     if args.write:
                         cls.write_config(item)
             except Exception as e:
