@@ -107,6 +107,12 @@ class JenkinsInventory:
             parser.add_argument(
                 "-l", "--list", help="Only show the url", action="store_true"
             )
+            parser.add_argument(
+                "-d",
+                "--show_disabled",
+                help="Show disabled jobs as well.",
+                action="store_true",
+            )
             args = cls.std_args(parser)
 
             cls.grep(args.search, args)
@@ -153,7 +159,25 @@ class JenkinsInventory:
 
         for line in highlighted_xml.splitlines():
             if search.lower() in line.lower():
-                logging.info(f"{url}: {line}")
+                cls.show_matching_line(item, line)
+
+    @classmethod
+    def show_matching_line(cls, item: job, line: str):
+        """
+        Show the matching line in the job.
+
+        Parameters
+        ----------
+        item : job
+            The job.
+        line : str
+            The matching line, formatted for display.
+        """
+        name = item.display_name
+        if name is None:
+            logging.info(f"{item.url}: {line}")
+            return
+        logging.info(f"{name} ({item.url}): {line}")
 
     @classmethod
     def grep(cls, search: str, args: Namespace) -> None:
@@ -178,6 +202,13 @@ class JenkinsInventory:
         # Search for Docker image in each job's configuration
         for item in jenkins.iter():
             try:
+                if (
+                    hasattr(item, "disabled")
+                    and item.disabled
+                    and not args.show_disabled
+                ):
+                    logging.debug(f"Not checking {item.url}: disabled")
+                    continue
                 config_xml = item.configure()
                 if search and search in config_xml:
                     cls.show_hit(item, search, args)
