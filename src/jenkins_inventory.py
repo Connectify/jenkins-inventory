@@ -13,11 +13,10 @@ import os
 import re
 from argparse import ArgumentParser, Namespace
 
-from api4jenkins import Jenkins
+from api4jenkins import Jenkins, job
 from py_dotenv_safe import config
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
-from pygments.token import Token
 
 from custom_lexer import XmlCustomLexer
 from highlight_style import SearchHighlightStyle
@@ -36,7 +35,7 @@ class JenkinsInventory:
     @classmethod
     def configure_loggers(cls, verbose_level: int) -> None:
         """
-        Standard logger config to hid messages from noisy libraries.
+        Standard logger config to hide messages from noisy libraries.
 
         Parameters
         ----------
@@ -112,21 +111,20 @@ class JenkinsInventory:
         cls.grep(args.search, args)
 
     @classmethod
-    def show_hit(cls, url: str, search: str, xml: str, args: Namespace) -> None:
+    def show_hit(cls, item: job, search: str, args: Namespace) -> None:
         """
         Format any hits for display.
 
         Parameters
         ----------
-        url : str
-            Where the match was found.
+        item : job
+            Jenkins job that matched.
         search : str
             To be highlighted.
-        xml : str
-            XML formatted text to be highlighted.
         args : Namespace
             Any other argumentss.
         """
+        url = item.url
         if args.list:
             logging.info(url)
             return
@@ -135,12 +133,13 @@ class JenkinsInventory:
         pattern = re.escape(search)
 
         # Highlight terms using a special Token type
+        xml = item.configure()
         highlighted_xml = re.sub(
             pattern,
             lambda m: f"{{{{search_highlight}}}}{m.group(0)}{{{{/search_highlight}}}}",
             xml,
             flags=re.IGNORECASE,
-        ).replace("__MATCH__", f"{Token.SearchMatch}")
+        )
 
         # Produce highlighted XML using Pygments and custom style
         highlighted_xml = highlight(
@@ -178,7 +177,7 @@ class JenkinsInventory:
             try:
                 config_xml = item.configure()
                 if search and search in config_xml:
-                    cls.show_hit(item.url, search, config_xml, args)
+                    cls.show_hit(item, search, args)
             except Exception as e:
                 logging.exception(
                     f"Error accessing configuration for {item.url}: {str(e)}"
