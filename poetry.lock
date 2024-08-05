@@ -411,6 +411,43 @@ files = [
 ]
 
 [[package]]
+name = "types-docutils"
+version = "0.21.0.20240907"
+description = "Typing stubs for docutils"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-docutils-0.21.0.20240907.tar.gz", hash = "sha256:5dd2aa5e2e06fcfa090020bc4115479b4dd28da3329ab708563ee29894bd3c0d"},
+    {file = "types_docutils-0.21.0.20240907-py3-none-any.whl", hash = "sha256:9c8ed6d90583944af00f6b5fa3aecc2101e20672f6b1a4a299c6bf7d1e47084d"},
+]
+
+[[package]]
+name = "types-pygments"
+version = "2.18.0.20240506"
+description = "Typing stubs for Pygments"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-Pygments-2.18.0.20240506.tar.gz", hash = "sha256:4b4c37812c87bbde687dbf27adf5bac593745a321e57f678dbc311571ba2ac9d"},
+    {file = "types_Pygments-2.18.0.20240506-py3-none-any.whl", hash = "sha256:11c90bc1737c9af55e5569558b88df7c2233e12325cb516215f722271444e91d"},
+]
+
+[package.dependencies]
+types-docutils = "*"
+types-setuptools = "*"
+
+[[package]]
+name = "types-setuptools"
+version = "74.1.0.20240907"
+description = "Typing stubs for setuptools"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-setuptools-74.1.0.20240907.tar.gz", hash = "sha256:0abdb082552ca966c1e5fc244e4853adc62971f6cd724fb1d8a3713b580e5a65"},
+    {file = "types_setuptools-74.1.0.20240907-py3-none-any.whl", hash = "sha256:15b38c8e63ca34f42f6063ff4b1dd662ea20086166d5ad6a102e670a52574120"},
+]
+
+[[package]]
 name = "ujson"
 version = "5.10.0"
 description = "Ultra fast JSON encoder and decoder for Python"
@@ -500,4 +537,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c167cbb74c5972a3699a31af2023685eb3389e81a6b50eeae4ce5cfe92a4e273"
+content-hash = "44ea354fac00568a8d166aa563ae7bbc73485d7b1c96061a6436d2f273899d14"

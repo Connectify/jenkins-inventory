@@ -2,13 +2,16 @@
 name = "jenkins-inventory"
 version = "0.1.0"
 description = "Query Jenkins for dependencies"
-packages = [{ include="jenkins_inventory.py", from="src/" }]
+packages = [{ include="cli.py", from="src/" }]
 authors = ["Mark A. Hershberger <mah@everybody.org>"]
 license = "gpl-3-or-greater"
 readme = "README.org"
 
 [tool.poetry.scripts]
-ji_grep = "jenkins_inventory:JenkinsInventory.grep_cli"
+ji_grep = "cli:JenkinsInventory.grep_cli"
+ji_list_jobs = "cli:JenkinsInventory.list_jobs_cli"
+ji_get_job = "cli:JenkinsInventory.get_job_cli"
+ji_put_job = "cli:JenkinsInventory.put_job_cli"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -20,9 +23,13 @@ pygments = "^2.18.0"
 python-lsp-server = "^1.11.0"
 Flake8-pyproject = "^1.2.3"
 icecream = "^2.1.3"
+types-pygments = "^2.18.0.20240506"
 
 [tool.flake8]
 max-line-length = 120
+per-file-ignores = """
+    __init__.py:F401
+"""
 
 [tool.pylint]
 max-line-length=120
@@ -32,6 +39,13 @@ line-length=120
 
 [tool.numpydoc_validation]
 checks = [ "all", "EX01", "SA01", "ES01" ]
+
+[tool.mypy]
+files = "src/**/*.py"
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["api4jenkins.*", "py_dotenv_safe.*"]
 
 [build-system]
 requires = ["poetry-core"]
