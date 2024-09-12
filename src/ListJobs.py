@@ -3,14 +3,26 @@
 import logging
 from argparse import Namespace
 
-from api4jenkins import Jenkins
+from api4jenkins import Jenkins, job
 
 
 class ListJobs:
     """Get a list of all jobs."""
 
     @classmethod
-    def list_jobs(cls, jenkins: Jenkins, search: str, args: Namespace) -> None:
+    def show_job(cls, job: job) -> None:
+        """
+        Show a job.
+
+        Parameters
+        ----------
+        job : job
+            Item to show.
+        """
+        logging.info(job.full_name)
+
+    @classmethod
+    def list_jobs(cls, jenkins: Jenkins, args: Namespace) -> None:
         """
         Implementation of ji_list_jobs.
 
@@ -18,8 +30,6 @@ class ListJobs:
         ----------
         jenkins : Jenkins
             Connection to Jenkins.
-        search : str
-            What to look for.
         args : Namespace
             Any other argumentss.
         """
@@ -27,7 +37,7 @@ class ListJobs:
         for item in jenkins.iter():
             try:
                 if hasattr(item, "disabled") and item.disabled and not args.show_disabled:
-                    logging.debug(f"Not checking {item.url}: disabled")
                     continue
+                cls.show_job(item)
             except Exception as e:
                 logging.exception(f"Error accessing configuration for {item.url}: {str(e)}")

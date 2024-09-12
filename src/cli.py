@@ -171,7 +171,7 @@ class JenkinsInventory:
         args = cls.std_args(parser)
 
         try:
-            ListJobs.list_jobs(cls.get_connection(), args.search, args)
+            ListJobs.list_jobs(cls.get_connection(), args)
         except KeyboardInterrupt:
             logging.warning("Interrupted")
 
