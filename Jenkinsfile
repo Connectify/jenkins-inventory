@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'private-server' }
+    agent { label 'docker-fabric' }
     options {
         timeout(time: 1, unit: 'HOURS')
     }
