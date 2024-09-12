@@ -3,23 +3,13 @@
 import logging
 from argparse import Namespace
 
-from api4jenkins import Jenkins, job
+from api4jenkins import Jenkins
+
+from JobUtils import JobUtils
 
 
 class ListJobs:
     """Get a list of all jobs."""
-
-    @classmethod
-    def show_job(cls, job: job) -> None:
-        """
-        Show a job.
-
-        Parameters
-        ----------
-        job : job
-            Item to show.
-        """
-        logging.info(job.full_name)
 
     @classmethod
     def list_jobs(cls, jenkins: Jenkins, args: Namespace) -> None:
@@ -33,11 +23,15 @@ class ListJobs:
         args : Namespace
             Any other argumentss.
         """
+        pattern = JobUtils.create_pattern(args.match, args) if args.match is not None else None
+
         # Search for Docker image in each job's configuration
         for item in jenkins.iter():
             try:
-                if hasattr(item, "disabled") and item.disabled and not args.show_disabled:
+                if JobUtils.is_disabled(item, args) or (
+                    pattern is not None and not JobUtils.matches(pattern, item.full_name)
+                ):
                     continue
-                cls.show_job(item)
+                JobUtils.show_job(item)
             except Exception as e:
                 logging.exception(f"Error accessing configuration for {item.url}: {str(e)}")

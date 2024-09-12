@@ -16,8 +16,8 @@ from py_dotenv_safe import config
 from GetJob import GetJob
 from Grep import Grep
 from HelpEnvAction import HelpEnvAction
-from Job import ji_job
 from ListJobs import ListJobs
+from PutJob import PutJob
 
 # dotenv config
 options = {
@@ -178,27 +178,35 @@ class JenkinsInventory:
     @classmethod
     def get_job_cli(cls) -> None:
         """UI for ji_get_job."""
-        parser = ArgumentParser(description="Fetch a Jenkins job")
+        parser = ArgumentParser(description="Fetch a Jenkins job.")
         parser.add_argument("name", help="The name of the job to get.")
+        parser.add_argument(
+            "-o",
+            "--filename",
+            help="The filename to use to save the file.  If "
+            + "- (a hyphen) is given, the job's XML configuration will go to stdout.  "
+            + "If this option is not used, then the job's name will be used.",
+        )
+        parser.add_argument("-f", "--force", help="Overwrite file if it already exists.", action="store_true")
         args = cls.std_args(parser)
 
         try:
-            ji_job.get_job(cls.get_connection(), args.search, args)
+            GetJob.get_job(cls.get_connection(), args.name, args)
         except KeyboardInterrupt:
             logging.warning("Interrupted")
 
     @classmethod
     def put_job_cli(cls) -> None:
         """UI for ji_put_job."""
-        parser = ArgumentParser(description="Upload an XML file fo a given Jenkins job.")
-        parser.add_argument("file", help="The XML file to use (read from STDIN if not supplied).")
-        parser.add_argument("-n", "--name", help="The name of the job.")
+        parser = ArgumentParser(description="Upload an XML file to create or replace a job.")
+        parser.add_argument("file", help="The XML file to use.  If - (a hyphen) is given, then read " + "from STDIN.")
+        parser.add_argument("-n", "--name", help="The name of the job.", required=True)
         parser.add_argument(
             "-f", "--force", help="Replace the job if one with this name already exists.", action="store_true"
         )
         args = cls.std_args(parser)
 
         try:
-            GetJob.get_job(cls.get_connection(), args.search, args)
+            PutJob.put_job(cls.get_connection(), args)
         except KeyboardInterrupt:
             logging.warning("Interrupted")
